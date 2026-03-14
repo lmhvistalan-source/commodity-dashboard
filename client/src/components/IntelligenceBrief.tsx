@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, AlertTriangle, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Signal {
@@ -40,57 +39,6 @@ interface IntelBrief {
   keyHeadlines: KeyHeadline[];
 }
 
-// Signal bar
-function SignalBar({ strength }: { strength: number }) {
-  const bars = 5;
-  const filled = Math.min(bars, Math.max(1, Math.round(strength)));
-  return (
-    <div className="flex items-end gap-px h-3">
-      {Array.from({ length: bars }).map((_, i) => (
-        <div
-          key={i}
-          className={`w-[3px] rounded-sm ${
-            i < filled
-              ? strength >= 4
-                ? "bg-[hsl(var(--ft-claret))]"
-                : strength >= 3
-                ? "bg-[hsl(var(--ft-mandarin))]"
-                : "bg-[hsl(var(--primary))]"
-              : "bg-border"
-          }`}
-          style={{ height: `${40 + i * 15}%` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// FT color tokens for commodities and topics
-const commodityColor = (name: string) => {
-  const map: Record<string, string> = {
-    Gold: "text-[hsl(var(--ft-mandarin))]", Oil: "text-[hsl(var(--ft-claret))]",
-    Copper: "text-[hsl(var(--ft-mandarin))]", Nickel: "text-[hsl(var(--primary))]",
-    Gas: "text-[hsl(var(--ft-oxford))]", Lithium: "text-[hsl(var(--primary))]",
-    Cobalt: "text-[hsl(var(--ft-oxford))]", Aluminum: "text-[hsl(var(--primary))]",
-    "Rare Earths": "text-[hsl(var(--ft-oxford))]", "Iron Ore": "text-[hsl(var(--ft-claret))]",
-    Steel: "text-muted-foreground", Uranium: "text-[hsl(var(--primary))]",
-    Vanadium: "text-[hsl(var(--ft-oxford))]", Antimony: "text-[hsl(var(--ft-claret))]",
-    Graphite: "text-muted-foreground",
-  };
-  return map[name] || "text-muted-foreground";
-};
-
-const topicColor = (topic: string) => {
-  const map: Record<string, string> = {
-    "Capital Project": "text-[hsl(var(--ft-oxford))]", "M&A": "text-[hsl(var(--ft-claret))]",
-    Policy: "text-[hsl(var(--ft-claret))]", "Supply Chain": "text-[hsl(var(--ft-mandarin))]",
-    Exploration: "text-[hsl(var(--primary))]", Production: "text-[hsl(var(--primary))]",
-    Market: "text-[hsl(var(--ft-oxford))]", ESG: "text-[hsl(var(--primary))]",
-    Technology: "text-[hsl(var(--ft-oxford))]", Financials: "text-[hsl(var(--ft-mandarin))]",
-  };
-  return map[topic] || "text-muted-foreground";
-};
-
 interface IntelligenceBriefProps {
   onCommodityClick?: (id: string) => void;
 }
@@ -106,7 +54,7 @@ export default function IntelligenceBrief({ onCommodityClick }: IntelligenceBrie
 
   if (isLoading) {
     return (
-      <div className="mb-6">
+      <div className="mb-8">
         <Skeleton className="h-5 w-48 mb-4" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Skeleton className="h-32" />
@@ -123,114 +71,120 @@ export default function IntelligenceBrief({ onCommodityClick }: IntelligenceBrie
     name.toLowerCase().replace(/\s+/g, "-").replace("(", "").replace(")", "");
 
   return (
-    <section className="mb-6">
-      {/* Section header — FT editorial style with rule line */}
-      <div className="flex items-baseline justify-between border-b-2 border-foreground pb-1 mb-4">
-        <h2 className="font-display text-lg font-bold text-foreground tracking-tight">
+    <section className="mb-8">
+      {/* Section header */}
+      <div className="flex items-baseline justify-between border-b border-border pb-2 mb-5">
+        <h2 className="font-display text-base font-bold text-foreground">
           Intelligence Brief
         </h2>
-        <div className="flex items-baseline gap-3 text-[11px] text-muted-foreground">
-          <span className="uppercase tracking-wider font-semibold text-[hsl(var(--ft-claret))]">{brief.period}</span>
-          <span>{brief.totalArticles24h} in 24h &middot; {brief.totalArticles} total</span>
-        </div>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {brief.totalArticles24h} in 24h · {brief.totalArticles} total
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Top Signals */}
-        <div>
-          <div className="flex items-center gap-1.5 mb-3">
-            <TrendingUp className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
-            <span className="text-xs font-bold text-foreground uppercase tracking-wider">Top Signals</span>
-          </div>
-          <div className="space-y-2">
-            {brief.topSignals.map((signal) => (
-              <button
-                key={signal.commodity}
-                onClick={() => onCommodityClick?.(commodityToId(signal.commodity))}
-                className="w-full flex items-center gap-2.5 py-1.5 hover:bg-muted/30 -mx-1.5 px-1.5 transition-colors text-left group"
-                data-testid={`signal-${signal.commodity}`}
-              >
-                <SignalBar strength={Math.min(5, Math.ceil(signal.articleCount / 3))} />
-                <span className={`text-[11px] font-bold uppercase tracking-wide ${commodityColor(signal.commodity)}`}>
-                  {signal.commodity}
-                </span>
-                <span className={`text-[11px] ${topicColor(signal.dominantTopic)}`}>
-                  {signal.dominantTopic}
-                </span>
-                <span className="ml-auto text-[11px] text-muted-foreground tabular-nums font-medium">
-                  {signal.articleCount}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Two-column editorial layout instead of symmetric 3-col dashboard grid */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-8">
 
-        {/* Activity Spikes + Trending */}
-        <div>
-          <div className="flex items-center gap-1.5 mb-3">
-            <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--ft-mandarin))]" />
-            <span className="text-xs font-bold text-foreground uppercase tracking-wider">Activity Spikes</span>
-          </div>
-          {brief.anomalies.length > 0 ? (
-            <div className="space-y-2">
-              {brief.anomalies.map((anomaly) => (
+        {/* Left: Top Signals + Activity Spikes */}
+        <div className="space-y-6">
+          {/* Top Signals */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground mb-3">Top signals</h3>
+            <div className="space-y-0">
+              {brief.topSignals.map((signal) => (
                 <button
-                  key={anomaly.commodity}
-                  onClick={() => onCommodityClick?.(commodityToId(anomaly.commodity))}
-                  className="w-full flex items-center gap-2.5 py-1.5 hover:bg-muted/30 -mx-1.5 px-1.5 transition-colors text-left"
+                  key={signal.commodity}
+                  onClick={() => onCommodityClick?.(commodityToId(signal.commodity))}
+                  className="w-full flex items-baseline justify-between py-2 border-b border-border/50 last:border-b-0 hover:bg-muted/20 -mx-2 px-2 transition-colors text-left group"
+                  data-testid={`signal-${signal.commodity}`}
                 >
-                  <span className={`text-[11px] font-bold uppercase tracking-wide ${commodityColor(anomaly.commodity)}`}>
-                    {anomaly.commodity}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[13px] font-semibold text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
+                      {signal.commodity}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {signal.dominantTopic}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {signal.articleCount} {signal.articleCount === 1 ? 'article' : 'articles'}
                   </span>
-                  <span className="text-[11px] text-[hsl(var(--ft-claret))] font-bold tabular-nums">
-                    {anomaly.spike}x
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">vs avg</span>
-                  <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{anomaly.articleCount}</span>
                 </button>
               ))}
             </div>
-          ) : (
-            <p className="text-xs text-muted-foreground/60 py-2">No unusual spikes</p>
-          )}
+          </div>
 
-          <div className="mt-4 pt-3 border-t border-border">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Trending</span>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-              {brief.trendingTopics.map((t) => (
-                <span key={t.topic} className="text-[11px] text-foreground font-medium">
-                  {t.topic} <span className="text-muted-foreground/50 tabular-nums text-[10px]">{t.count}</span>
-                </span>
-              ))}
-            </div>
+          {/* Activity Spikes */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground mb-3">Activity spikes</h3>
+            {brief.anomalies.length > 0 ? (
+              <div className="space-y-0">
+                {brief.anomalies.map((anomaly) => (
+                  <button
+                    key={anomaly.commodity}
+                    onClick={() => onCommodityClick?.(commodityToId(anomaly.commodity))}
+                    className="w-full flex items-baseline justify-between py-2 border-b border-border/50 last:border-b-0 hover:bg-muted/20 -mx-2 px-2 transition-colors text-left"
+                  >
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[13px] font-semibold text-foreground">
+                        {anomaly.commodity}
+                      </span>
+                      <span className="text-xs font-semibold text-[hsl(var(--ft-claret))] tabular-nums">
+                        {anomaly.spike}× avg
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {anomaly.articleCount}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground/60 py-1">No unusual activity</p>
+            )}
+
+            {/* Trending inline */}
+            {brief.trendingTopics.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-border/50">
+                <span className="text-[11px] text-muted-foreground">Trending: </span>
+                {brief.trendingTopics.map((t, i) => (
+                  <span key={t.topic} className="text-[11px] text-foreground">
+                    {t.topic}{i < brief.trendingTopics.length - 1 ? ", " : ""}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Key Headlines */}
+        {/* Right: Key Headlines */}
         <div>
-          <div className="flex items-center gap-1.5 mb-3">
-            <span className="text-xs font-bold text-foreground uppercase tracking-wider">Key Headlines</span>
-          </div>
-          <div className="space-y-3">
+          <h3 className="text-xs font-semibold text-muted-foreground mb-3">Key headlines</h3>
+          <div className="space-y-0">
             {brief.keyHeadlines.map((h, i) => (
               <a
                 key={i}
                 href={h.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block group"
+                className="block group border-b border-border/50 last:border-b-0 py-3 first:pt-0 hover:bg-muted/20 -mx-2 px-2 transition-colors"
               >
-                <div className="flex items-baseline gap-2">
-                  <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${commodityColor(h.commodity)}`}>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-[11px] font-semibold text-muted-foreground">
                     {h.commodity}
                   </span>
+                  {h.topic && (
+                    <span className="text-[11px] text-muted-foreground/60">
+                      {h.topic}
+                    </span>
+                  )}
                 </div>
-                <h3 className="font-serif text-[13px] font-semibold leading-snug text-foreground group-hover:text-[hsl(var(--ft-claret))] transition-colors mt-0.5">
+                <h4 className="font-serif text-[14px] font-semibold leading-snug text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
                   {h.headline}
-                </h3>
-                <div className="text-[10px] text-muted-foreground/60 mt-0.5">
-                  {h.source}{h.topic ? ` · ${h.topic}` : ""}
-                </div>
+                </h4>
+                <span className="text-[11px] text-muted-foreground/50 mt-1 block">
+                  {h.source}
+                </span>
               </a>
             ))}
           </div>

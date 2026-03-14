@@ -76,35 +76,34 @@ function NewsCard({ article, onCommodityClick, isLead }: { article: EnrichedArti
       {/* Topic + commodity labels */}
       <div className="flex items-center gap-2 flex-wrap">
         {article.topic && (
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${topicColorMap[article.topic] || "text-muted-foreground"}`}>
+          <span className="text-[11px] font-semibold text-muted-foreground">
             {article.topic}
           </span>
         )}
         {displayTags.map((tag) => {
-          const color = commodityColorMap[tag] || "text-muted-foreground";
           const routeId = commodityLabelToId[tag];
           if (routeId && onCommodityClick) {
             return (
               <button
                 key={tag}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCommodityClick(routeId); }}
-                className={`text-[11px] font-semibold uppercase tracking-wide ${color} hover:underline cursor-pointer`}
+                className="text-[11px] font-semibold text-foreground/70 hover:text-[hsl(var(--primary))] hover:underline cursor-pointer"
               >
                 {tag}
               </button>
             );
           }
           return (
-            <span key={tag} className={`text-[11px] font-semibold uppercase tracking-wide ${color}`}>{tag}</span>
+            <span key={tag} className="text-[11px] font-semibold text-foreground/70">{tag}</span>
           );
         })}
         {article.region && article.region.length > 0 && article.region.map((r) => (
-          <span key={r} className="text-[11px] text-muted-foreground">{r}</span>
+          <span key={r} className="text-[11px] text-muted-foreground/60">{r}</span>
         ))}
       </div>
 
       {/* Headline */}
-      <h3 className={`font-display ${isLead ? "text-xl leading-tight" : "text-[15px] leading-snug"} font-bold text-foreground group-hover:text-[hsl(var(--ft-claret))] transition-colors`}>
+      <h3 className={`font-display ${isLead ? "text-xl leading-tight" : "text-[15px] leading-snug"} font-bold text-foreground group-hover:text-[hsl(var(--primary))] transition-colors`}>
         {article.headline}
       </h3>
 
@@ -221,14 +220,9 @@ export default function NewsFeed({ searchQuery, activeRegion = "all", activeComm
   return (
     <div className="flex flex-col">
       {/* Section header with rule */}
-      <div className="flex items-baseline justify-between border-b-2 border-foreground pb-1 mb-4">
-        <h2 className="font-display text-lg font-bold text-foreground tracking-tight">Market News</h2>
-        <div className="flex items-baseline gap-2">
-          {isLive && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[hsl(var(--primary))]">Live</span>
-          )}
-          <span className="text-[11px] text-muted-foreground">{totalArticles} articles · {uniqueSources} sources</span>
-        </div>
+      <div className="flex items-baseline justify-between border-b border-border pb-2 mb-4">
+        <h2 className="font-display text-base font-bold text-foreground">Market News</h2>
+        <span className="text-xs text-muted-foreground">{totalArticles} articles · {uniqueSources} sources</span>
       </div>
 
       {/* Category tabs — FT underline */}
@@ -238,9 +232,9 @@ export default function NewsFeed({ searchQuery, activeRegion = "all", activeComm
             key={key}
             data-testid={`news-filter-${key}`}
             onClick={() => handleCategoryChange(key)}
-            className={`px-4 py-2 text-[12px] font-semibold transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
               category === key
-                ? "border-[hsl(var(--ft-claret))] text-foreground"
+                ? "border-foreground text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -278,7 +272,7 @@ export default function NewsFeed({ searchQuery, activeRegion = "all", activeComm
               <button
                 data-testid="load-more-news"
                 onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
-                className="mt-4 flex items-center justify-center gap-1.5 py-3 text-[12px] font-semibold text-muted-foreground transition-colors hover:text-foreground border-t border-border"
+                className="mt-4 flex items-center justify-center gap-1.5 py-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground border-t border-border"
               >
                 <ChevronDown className="h-3.5 w-3.5" />
                 Load {Math.min(remaining, PAGE_SIZE)} more ({remaining} remaining)

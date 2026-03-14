@@ -80,8 +80,8 @@ export default function Dashboard() {
 
         {/* Mobile: market data on top */}
         <div className="lg:hidden mb-6">
-          <div className="border-b-2 border-foreground pb-1 mb-3">
-            <h2 className="font-display text-sm font-bold text-foreground uppercase tracking-wider">Markets Data</h2>
+          <div className="border-b border-border pb-2 mb-3">
+            <h2 className="font-display text-sm font-semibold text-foreground">Markets</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
             {displayCommodities.map((c) => (
@@ -106,8 +106,8 @@ export default function Dashboard() {
           <div className="hidden lg:block lg:w-[340px] lg:flex-shrink-0">
             <div className="sticky top-[120px]">
               {/* Markets Data header */}
-              <div className="border-b-2 border-foreground pb-1 mb-1">
-                <h2 className="font-display text-sm font-bold text-foreground uppercase tracking-wider">Markets Data</h2>
+              <div className="border-b border-border pb-2 mb-1">
+                <h2 className="font-display text-sm font-semibold text-foreground">Markets</h2>
               </div>
               <div className="mb-5">
                 {displayCommodities.map((c) => (
