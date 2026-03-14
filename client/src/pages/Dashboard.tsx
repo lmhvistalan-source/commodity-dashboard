@@ -7,6 +7,7 @@ import KpiCard from "@/components/KpiCard";
 import PriceChart from "@/components/PriceChart";
 import NewsFeed from "@/components/NewsFeed";
 import IntelligenceBrief from "@/components/IntelligenceBrief";
+import CompanyWatchlist from "@/components/CompanyWatchlist";
 import { PerplexityAttribution } from "@/components/PerplexityAttribution";
 import { commodities as fallbackCommodities } from "@/data/commodityData";
 import type { Commodity } from "@/data/commodityData";
@@ -104,7 +105,7 @@ export default function Dashboard() {
 
           {/* Sidebar: market data + chart */}
           <div className="hidden lg:block lg:w-[340px] lg:flex-shrink-0">
-            <div className="sticky top-[120px]">
+            <div className="sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto scrollbar-thin">
               {/* Markets Data header */}
               <div className="border-b border-border pb-2 mb-1">
                 <h2 className="font-display text-sm font-semibold text-foreground">Markets</h2>
@@ -121,6 +122,9 @@ export default function Dashboard() {
                 commodityName={activeCommodity !== "all" ? chartName : "Gold"}
                 commodityUnit={activeCommodity !== "all" ? chartUnit : "USD/oz"}
               />
+
+              {/* Company Watchlist */}
+              <CompanyWatchlist />
             </div>
           </div>
         </div>
