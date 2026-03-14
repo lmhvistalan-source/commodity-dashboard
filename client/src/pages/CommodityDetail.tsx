@@ -170,7 +170,7 @@ export default function CommodityDetail() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Top bar — dark ticker style matching Header */}
       <div className="sticky top-0 z-30 bg-background">
-        <div className="bg-[#262a33] dark:bg-[#1a1817] text-white">
+        <div className="bg-[#1c2a3a] dark:bg-[#141c28] text-white">
           <div className="mx-auto max-w-[1400px] flex items-center justify-between px-4 sm:px-6 h-8">
             <Link
               href="/"

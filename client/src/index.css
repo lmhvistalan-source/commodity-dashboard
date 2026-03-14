@@ -2,56 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE — Clean professional palette */
+/* LIGHT MODE — Premium financial palette */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;       /* #ffffff — clean white */
-  --foreground: 220 10% 16%;     /* #252a2e — crisp dark text */
-  --border: 220 8% 88%;          /* #dfe1e4 — cool neutral border */
-  --card: 220 10% 98%;           /* #f9fafb — very subtle off-white */
-  --card-foreground: 220 10% 16%;
-  --card-border: 220 8% 90%;
-  --sidebar: 220 10% 96%;
-  --sidebar-foreground: 220 10% 16%;
-  --sidebar-border: 220 8% 88%;
-  --sidebar-primary: 184 84% 26%;  /* #0d7680 — Teal */
+  --background: 45 14% 98%;      /* #fafaf7 — warm off-white */
+  --foreground: 215 28% 17%;     /* #1f2d3d — deep navy, not black */
+  --border: 220 12% 86%;         /* #d9dce1 — refined cool border */
+  --card: 40 10% 97%;            /* #f8f8f5 — warm card surface */
+  --card-foreground: 215 28% 17%;
+  --card-border: 220 10% 88%;
+  --sidebar: 40 8% 96%;
+  --sidebar-foreground: 215 28% 17%;
+  --sidebar-border: 220 12% 86%;
+  --sidebar-primary: 190 65% 28%;  /* #196e78 — deep teal */
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 220 8% 92%;
-  --sidebar-accent-foreground: 220 10% 16%;
-  --sidebar-ring: 184 84% 26%;
+  --sidebar-accent-foreground: 215 28% 17%;
+  --sidebar-ring: 190 65% 28%;
   --popover: 0 0% 100%;
-  --popover-foreground: 220 10% 16%;
-  --popover-border: 220 8% 88%;
-  --primary: 184 84% 26%;        /* #0d7680 — Teal */
+  --popover-foreground: 215 28% 17%;
+  --popover-border: 220 12% 86%;
+  --primary: 190 65% 28%;        /* #196e78 — rich teal */
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 8% 92%;
-  --secondary-foreground: 220 10% 16%;
-  --muted: 220 8% 94%;
-  --muted-foreground: 220 6% 44%;  /* #676d73 — professional gray */
+  --secondary: 220 8% 93%;
+  --secondary-foreground: 215 28% 17%;
+  --muted: 40 6% 94%;
+  --muted-foreground: 215 10% 46%;  /* #6a7382 — warm gray */
   --accent: 220 8% 92%;
-  --accent-foreground: 220 10% 16%;
-  --destructive: 0 100% 40%;     /* #cc0000 — crimson */
+  --accent-foreground: 215 28% 17%;
+  --destructive: 0 72% 45%;      /* #c52525 — refined red */
   --destructive-foreground: 0 0% 100%;
-  --input: 220 8% 82%;
-  --ring: 184 84% 26%;
-  --chart-1: 184 84% 26%;        /* teal */
-  --chart-2: 28 100% 54%;        /* mandarin */
-  --chart-3: 219 73% 33%;        /* oxford */
-  --chart-4: 340 82% 33%;        /* claret */
-  --chart-5: 270 42% 35%;        /* velvet */
-  --ft-claret: 340 82% 33%;      /* #990f3d */
-  --ft-oxford: 219 73% 33%;      /* #0f5499 */
-  --ft-mandarin: 28 100% 54%;    /* #ff8833 */
-  --ft-wheat: 220 8% 94%;        /* neutral muted surface */
+  --input: 220 10% 84%;
+  --ring: 190 65% 28%;
+  --chart-1: 190 65% 28%;        /* deep teal */
+  --chart-2: 25 80% 50%;         /* warm copper */
+  --chart-3: 215 55% 35%;        /* navy */
+  --chart-4: 345 60% 40%;        /* burgundy */
+  --chart-5: 260 35% 40%;        /* plum */
+  --ft-claret: 345 60% 38%;      /* #9a2040 — refined burgundy */
+  --ft-oxford: 215 55% 35%;      /* #285a8e — warm navy */
+  --ft-mandarin: 25 80% 50%;     /* #e68a1a — warm copper */
+  --ft-wheat: 40 8% 94%;         /* warm muted surface */
   --font-sans: 'DM Sans', 'Inter', system-ui, sans-serif;
   --font-serif: 'Playfair Display', Georgia, 'Libre Baskerville', serif;
   --font-display: 'Playfair Display', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --radius: .25rem;              /* FT uses sharper corners */
+  --radius: .25rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
@@ -86,44 +86,44 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 226 13% 14%;     /* #262a33 — FT Slate */
-  --foreground: 220 8% 91%;      /* #e9eaeb */
-  --border: 226 10% 22%;
-  --card: 226 12% 17%;           /* slightly lighter slate */
-  --card-foreground: 220 8% 91%;
-  --card-border: 226 10% 20%;
-  --sidebar: 226 12% 15%;
-  --sidebar-foreground: 220 8% 91%;
-  --sidebar-border: 226 10% 20%;
-  --sidebar-primary: 184 70% 42%;
-  --sidebar-primary-foreground: 226 13% 14%;
-  --sidebar-accent: 226 10% 20%;
-  --sidebar-accent-foreground: 220 8% 91%;
-  --sidebar-ring: 184 70% 42%;
-  --popover: 226 12% 16%;
-  --popover-foreground: 220 8% 91%;
-  --popover-border: 226 10% 22%;
-  --primary: 184 70% 42%;        /* lighter teal for dark */
-  --primary-foreground: 226 13% 14%;
-  --secondary: 226 10% 22%;
-  --secondary-foreground: 220 8% 91%;
-  --muted: 226 10% 24%;
-  --muted-foreground: 220 5% 55%;
-  --accent: 226 10% 20%;
-  --accent-foreground: 220 8% 91%;
-  --destructive: 0 80% 55%;
+  --background: 220 20% 13%;     /* #1b2230 — deep navy */
+  --foreground: 215 15% 88%;     /* #dce1e8 */
+  --border: 220 16% 20%;
+  --card: 220 18% 16%;           /* navy surface */
+  --card-foreground: 215 15% 88%;
+  --card-border: 220 14% 19%;
+  --sidebar: 220 18% 14%;
+  --sidebar-foreground: 215 15% 88%;
+  --sidebar-border: 220 14% 19%;
+  --sidebar-primary: 190 55% 48%;
+  --sidebar-primary-foreground: 220 20% 13%;
+  --sidebar-accent: 220 14% 20%;
+  --sidebar-accent-foreground: 215 15% 88%;
+  --sidebar-ring: 190 55% 48%;
+  --popover: 220 18% 15%;
+  --popover-foreground: 215 15% 88%;
+  --popover-border: 220 16% 20%;
+  --primary: 190 55% 48%;        /* bright teal for dark */
+  --primary-foreground: 220 20% 13%;
+  --secondary: 220 14% 21%;
+  --secondary-foreground: 215 15% 88%;
+  --muted: 220 14% 23%;
+  --muted-foreground: 215 10% 55%;
+  --accent: 220 14% 20%;
+  --accent-foreground: 215 15% 88%;
+  --destructive: 0 65% 55%;
   --destructive-foreground: 0 0% 100%;
-  --input: 226 10% 28%;
-  --ring: 184 70% 42%;
-  --chart-1: 184 70% 48%;
-  --chart-2: 28 90% 62%;
-  --chart-3: 219 60% 55%;
-  --chart-4: 340 65% 55%;
-  --chart-5: 270 40% 55%;
-  --ft-claret: 340 70% 55%;
-  --ft-oxford: 219 60% 55%;
-  --ft-mandarin: 28 90% 62%;
-  --ft-wheat: 226 10% 22%;
+  --input: 220 14% 26%;
+  --ring: 190 55% 48%;
+  --chart-1: 190 55% 52%;
+  --chart-2: 25 75% 58%;
+  --chart-3: 215 50% 55%;
+  --chart-4: 345 55% 55%;
+  --chart-5: 260 35% 55%;
+  --ft-claret: 345 55% 55%;
+  --ft-oxford: 215 50% 55%;
+  --ft-mandarin: 25 75% 58%;
+  --ft-wheat: 220 14% 21%;
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
