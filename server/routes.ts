@@ -562,177 +562,416 @@ function computeIntelBrief(articles: any[]) {
   const commodityCounts3d: Record<string, number> = {};
   for (const a of recentArticles) {
     for (const t of (a.tags || [a.tag])) {
-      commodityCounts[t] = (commodityCounts[t] || 0) + 1;
+      if (t && t !== "Commodity") commodityCounts[t] = (commodityCounts[t] || 0) + 1;
     }
   }
   for (const a of threeDayArticles) {
     for (const t of (a.tags || [a.tag])) {
-      commodityCounts3d[t] = (commodityCounts3d[t] || 0) + 1;
+      if (t && t !== "Commodity") commodityCounts3d[t] = (commodityCounts3d[t] || 0) + 1;
     }
   }
 
-  // Top movers = commodities with most coverage
-  const topMovers = Object.entries(commodityCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, count]) => ({ name, count }));
-
-  // Trending = fast-rising in last 24h vs 3-day baseline
-  const trending: string[] = [];
-  for (const [commodity, count24h] of Object.entries(commodityCounts)) {
-    const count3d = commodityCounts3d[commodity] || 0;
-    const dailyAvg3d = count3d / 3;
-    if (count24h > dailyAvg3d * 1.5 && count24h >= 3) {
-      trending.push(commodity);
-    }
-  }
-
-  // Regional hotspots
-  const regionCounts: Record<string, number> = {};
-  for (const a of recentArticles) {
-    for (const r of (a.region || [])) {
-      regionCounts[r] = (regionCounts[r] || 0) + 1;
-    }
-  }
-  const hotRegions = Object.entries(regionCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([name]) => name);
-
-  // Topic breakdown
+  // Count articles per topic
   const topicCounts: Record<string, number> = {};
   for (const a of recentArticles) {
     if (a.topic) topicCounts[a.topic] = (topicCounts[a.topic] || 0) + 1;
   }
-  const topTopics = Object.entries(topicCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 4)
-    .map(([name, count]) => ({ name, count }));
 
-  // Key headlines: top 5 recent articles with highest-coverage commodities  
-  const topCommoditySet = new Set(topMovers.map(m => m.name));
-  const keyHeadlines = recentArticles
-    .filter(a => (a.tags || [a.tag]).some((t: string) => topCommoditySet.has(t)))
+  // Top signals: commodities with most articles in 24h
+  const topSignals = Object.entries(commodityCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([commodity, count]) => {
+      // Find the dominant topic for this commodity
+      const topicForCommodity: Record<string, number> = {};
+      for (const a of recentArticles) {
+        if ((a.tags || [a.tag]).includes(commodity) && a.topic) {
+          topicForCommodity[a.topic] = (topicForCommodity[a.topic] || 0) + 1;
+        }
+      }
+      const dominantTopic = Object.entries(topicForCommodity).sort((a, b) => b[1] - a[1])[0];
+      return {
+        commodity,
+        articleCount: count,
+        dominantTopic: dominantTopic ? dominantTopic[0] : "Market",
+        topicCount: dominantTopic ? dominantTopic[1] : 0,
+      };
+    });
+
+  // Anomaly detection: commodities with unusual activity (>2x their average)
+  const avgPerCommodity3d: Record<string, number> = {};
+  for (const [k, v] of Object.entries(commodityCounts3d)) {
+    avgPerCommodity3d[k] = v / 3; // daily average over 3 days
+  }
+  const anomalies = Object.entries(commodityCounts)
+    .filter(([k, v]) => {
+      const avg = avgPerCommodity3d[k] || 1;
+      return v > avg * 1.8 && v >= 3; // 80% above average and at least 3 articles
+    })
+    .map(([commodity, count]) => ({
+      commodity,
+      articleCount: count,
+      avgCount: Math.round((avgPerCommodity3d[commodity] || 1) * 10) / 10,
+      spike: Math.round((count / (avgPerCommodity3d[commodity] || 1)) * 100) / 100,
+    }))
+    .sort((a, b) => b.spike - a.spike)
+    .slice(0, 4);
+
+  // Trending topics
+  const trendingTopics = Object.entries(topicCounts)
+    .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(a => ({ headline: a.headline, source: a.source, tags: a.tags || [a.tag] }));
+    .map(([topic, count]) => ({ topic, count }));
+
+  // Key headlines — ranked by importance, not just recency
+  // Scoring factors: source authority, topic significance, commodity relevance,
+  // anomaly correlation, multi-tag breadth, headline specificity, and recency
+  const anomalyCommodities = new Set(anomalies.map(a => a.commodity));
+  const topSignalCommodities = new Set(topSignals.slice(0, 3).map(s => s.commodity));
+
+  const SOURCE_AUTHORITY: Record<string, number> = {
+    "Reuters (via Google News)": 10,
+    "Bloomberg (via Google News)": 10,
+    "FT (via Google News)": 9,
+    "S&P Global (via Google News)": 9,
+    "Mining.com": 8,
+    "The Northern Miner": 7,
+    "Mining Weekly": 7,
+    "Kitco": 7,
+    "Canadian Mining Journal": 6,
+    "OilPrice.com": 7,
+    "RigZone": 6,
+    "World Oil": 6,
+    "Fastmarkets (via Google News)": 7,
+    "Argus Media (via Google News)": 7,
+    "Mining Journal (via Google News)": 7,
+    "Oil & Gas Journal (via Google News)": 6,
+    "Trading Economics (via Google News)": 5,
+    "GoldSeek": 4,
+    "Google News": 3,
+  };
+
+  const TOPIC_WEIGHT: Record<string, number> = {
+    "M&A": 12,
+    "Capital Project": 10,
+    "Policy": 10,
+    "Supply Chain": 8,
+    "Exploration": 6,
+    "Production": 5,
+    "Financials": 5,
+    "Technology": 4,
+    "ESG": 3,
+    "Market": 2,
+    "": 0,
+  };
+
+  function scoreArticle(a: any): number {
+    let score = 0;
+
+    // 1. Source authority (0-10)
+    score += SOURCE_AUTHORITY[a.source] || 3;
+
+    // 2. Topic significance (0-12)
+    score += TOPIC_WEIGHT[a.topic] || 0;
+
+    // 3. Anomaly correlation — if article covers a commodity with unusual activity, it's more newsworthy
+    const articleTags = a.tags || [a.tag];
+    const anomalyHits = articleTags.filter((t: string) => anomalyCommodities.has(t)).length;
+    score += anomalyHits * 6;
+
+    // 4. Top-signal correlation — articles about trending commodities matter more
+    const signalHits = articleTags.filter((t: string) => topSignalCommodities.has(t)).length;
+    score += signalHits * 3;
+
+    // 5. Multi-tag breadth — articles spanning multiple commodities are usually bigger stories
+    const realTags = articleTags.filter((t: string) => t && t !== "Commodity");
+    if (realTags.length >= 3) score += 5;
+    else if (realTags.length === 2) score += 2;
+
+    // 6. Headline specificity — contains dollar amounts, percentages, or company names (signals hard news)
+    const hl = a.headline || "";
+    if (/\$\d/.test(hl) || /\d+%/.test(hl)) score += 4;  // quantitative headline
+    if (/\b(billion|million|bn|mn)\b/i.test(hl)) score += 3;  // large-scale deal/investment
+
+    // 7. Multi-region — stories that span regions are usually geopolitical and significant
+    const regions = a.region || [];
+    if (regions.length >= 2) score += 3;
+
+    // 8. Recency tiebreaker — newer articles get a slight bump (0-2 points)
+    if (a.rawDate) {
+      const ageHours = (now - new Date(a.rawDate).getTime()) / (60 * 60 * 1000);
+      if (ageHours < 3) score += 2;
+      else if (ageHours < 8) score += 1;
+    }
+
+    return score;
+  }
+
+  const scoredArticles = recentArticles
+    .filter((a: any) => a.tags && a.tags.length > 0 && a.tags[0] !== "Commodity")
+    .map((a: any) => ({ article: a, score: scoreArticle(a) }))
+    .sort((a, b) => b.score - a.score);
+
+  // Diversify: avoid picking 5 headlines about the same commodity
+  const keyHeadlines: any[] = [];
+  const usedCommodities: Record<string, number> = {};
+  for (const { article } of scoredArticles) {
+    if (keyHeadlines.length >= 5) break;
+    const primaryTag = article.tags?.[0] || article.tag;
+    // Allow max 2 headlines per commodity to ensure variety
+    if ((usedCommodities[primaryTag] || 0) >= 2) continue;
+    usedCommodities[primaryTag] = (usedCommodities[primaryTag] || 0) + 1;
+    keyHeadlines.push({
+      headline: article.headline,
+      commodity: primaryTag,
+      topic: article.topic || "",
+      source: article.source,
+      url: article.url,
+    });
+  }
 
   return {
     generatedAt: new Date().toISOString(),
+    period: "24h",
+    totalArticles24h: recentArticles.length,
     totalArticles: articles.length,
-    last24hArticles: recentArticles.length,
-    topMovers,
-    trending,
-    hotRegions,
-    topTopics,
+    topSignals,
+    anomalies,
+    trendingTopics,
     keyHeadlines,
   };
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  const httpServer = createServer(app);
+export async function registerRoutes(
+  httpServer: Server,
+  app: Express
+): Promise<Server> {
 
-  // GET /api/prices - commodity prices
-  app.get("/api/prices", async (req, res) => {
+  // GET /api/prices - real-time commodity prices
+  app.get("/api/prices", async (_req, res) => {
     try {
-      const data = await fetchCommodityPrices();
-      if (!data) return res.status(503).json({ error: "Price data unavailable" });
-      res.json(data);
+      const prices = await fetchCommodityPrices();
+      if (prices) {
+        res.json({ success: true, data: prices, timestamp: Date.now() });
+      } else {
+        res.status(503).json({ success: false, error: "Price data unavailable" });
+      }
     } catch (err) {
-      console.error("/api/prices error:", err);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+
+  // GET /api/chart?range=1M&symbol=GC=F - commodity price chart data
+  app.get("/api/chart", async (req, res) => {
+    try {
+      const range = (req.query.range as string) || "1M";
+      const symbol = (req.query.symbol as string) || "GC=F";
+      const validRanges = ["1D", "1W", "1M", "3M", "1Y"];
+      if (!validRanges.includes(range)) {
+        return res.status(400).json({ success: false, error: "Invalid range" });
+      }
+
+      // Validate symbol is in our known list
+      const info = CHART_SYMBOLS[symbol];
+      const chartData = await fetchChartData(symbol, range);
+      if (chartData) {
+        res.json({
+          success: true,
+          data: chartData,
+          meta: info ? { name: info.name, unit: info.unit } : { name: symbol, unit: "" },
+          timestamp: Date.now(),
+        });
+      } else {
+        res.status(503).json({ success: false, error: "Chart data unavailable" });
+      }
+    } catch (err) {
+      res.status(500).json({ success: false, error: "Internal server error" });
     }
   });
 
   // GET /api/news - commodity news
-  app.get("/api/news", async (req, res) => {
+  app.get("/api/news", async (_req, res) => {
     try {
-      const data = await fetchCommodityNews();
-      if (!data) return res.status(503).json({ error: "News data unavailable" });
-      res.json(data);
+      const news = await fetchCommodityNews();
+      if (news) {
+        res.json({ success: true, data: news, timestamp: Date.now() });
+      } else {
+        res.status(503).json({ success: false, error: "News data unavailable" });
+      }
     } catch (err) {
-      console.error("/api/news error:", err);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ success: false, error: "Internal server error" });
     }
   });
 
-  // GET /api/intel-brief - AI intelligence brief
-  app.get("/api/intel-brief", async (req, res) => {
+  // GET /api/intel - intelligence brief (daily signals, anomalies, trending)
+  app.get("/api/intel", async (_req, res) => {
     try {
-      const articles = await fetchCommodityNews();
-      if (!articles || articles.length === 0) {
-        return res.status(503).json({ error: "News data unavailable for intel brief" });
+      const news = await fetchCommodityNews();
+      if (news && news.length > 0) {
+        const brief = computeIntelBrief(news);
+        res.json({ success: true, data: brief, timestamp: Date.now() });
+      } else {
+        res.status(503).json({ success: false, error: "Intel data unavailable" });
       }
-      const brief = computeIntelBrief(articles);
-      res.json(brief);
     } catch (err) {
-      console.error("/api/intel-brief error:", err);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ success: false, error: "Internal server error" });
     }
   });
 
-  // GET /api/chart/:symbol - chart data for a specific symbol and range
-  app.get("/api/chart/:symbol", async (req, res) => {
+  // GET /api/commodity/:id - commodity detail (intel data + filtered news)
+  app.get("/api/commodity/:id", async (req, res) => {
     try {
-      const symbol = req.params.symbol;
-      const range = (req.query.range as string) || "1M";
-
-      const chartConfig = CHART_SYMBOLS[symbol];
-      if (!chartConfig) {
-        return res.status(400).json({ error: "Unknown symbol" });
+      const { COMMODITY_INTEL } = await import("../shared/commodityIntel");
+      const id = req.params.id;
+      const intel = COMMODITY_INTEL[id];
+      if (!intel) {
+        return res.status(404).json({ success: false, error: "Commodity not found" });
       }
 
-      const data = await fetchChartData(symbol, range);
-      if (!data) return res.status(503).json({ error: "Chart data unavailable" });
+      // Get price data if available
+      const symConfig = COMMODITY_SYMBOLS[id === "iron-ore" ? "iron" : id === "natgas" || id === "gas" ? "natgas" : id];
+      let priceData = null;
+      if (symConfig) {
+        try {
+          const yahooFinance = await getYahoo();
+          const quotes = await yahooFinance.quote([symConfig.symbol]);
+          const quote = Array.isArray(quotes) ? quotes[0] : quotes;
+          if (quote) {
+            priceData = {
+              price: quote.regularMarketPrice || 0,
+              change: Math.round((quote.regularMarketChangePercent || 0) * 100) / 100,
+              symbol: symConfig.symbol,
+              unit: symConfig.unit,
+              name: symConfig.name,
+            };
+          }
+        } catch {}
+      }
+
+      // Get news filtered to this commodity
+      const allNews = await fetchCommodityNews();
+      const commodityLabel = intel.name;
+      const filteredNews = (allNews || []).filter((a: any) => {
+        const tags = a.tags || [a.tag];
+        return tags.includes(commodityLabel);
+      }).slice(0, 50);
+
+      // Group news by topic
+      const newsByTopic: Record<string, any[]> = {};
+      for (const a of filteredNews) {
+        const topic = a.topic || "General";
+        if (!newsByTopic[topic]) newsByTopic[topic] = [];
+        newsByTopic[topic].push(a);
+      }
 
       res.json({
-        symbol,
-        name: chartConfig.name,
-        unit: chartConfig.unit,
-        range,
-        data,
+        success: true,
+        data: {
+          ...intel,
+          price: priceData,
+          news: filteredNews,
+          newsByTopic,
+          totalNews: filteredNews.length,
+        },
+        timestamp: Date.now(),
       });
     } catch (err) {
-      console.error("/api/chart error:", err);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // ===== Watchlist API endpoints =====
-
-  // GET /api/watchlist - get current watchlist
-  app.get("/api/watchlist", async (req, res) => {
-    try {
-      const watchlist = await storage.getWatchlist();
-      res.json(watchlist);
-    } catch (err) {
-      console.error("/api/watchlist GET error:", err);
+      console.error("Commodity detail error:", err);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
   });
 
-  // POST /api/watchlist - add item to watchlist
-  app.post("/api/watchlist", async (req, res) => {
+  // ===== Company Watchlist =====
+  interface WatchlistCompany {
+    id: string;
+    name: string;
+    ticker?: string;
+    sector: string;
+    keywords: string[]; // search terms to match in news
+  }
+
+  // Default watchlist
+  let watchlist: WatchlistCompany[] = [
+    { id: "rio-tinto", name: "Rio Tinto", ticker: "RIO", sector: "Mining", keywords: ["Rio Tinto", "RIO"] },
+    { id: "bhp", name: "BHP", ticker: "BHP", sector: "Mining", keywords: ["BHP"] },
+    { id: "vale", name: "Vale", ticker: "VALE", sector: "Mining", keywords: ["Vale SA", "Vale "] },
+    { id: "glencore", name: "Glencore", ticker: "GLEN", sector: "Trading", keywords: ["Glencore"] },
+    { id: "freeport", name: "Freeport-McMoRan", ticker: "FCX", sector: "Mining", keywords: ["Freeport", "FCX", "Freeport-McMoRan"] },
+    { id: "albemarle", name: "Albemarle", ticker: "ALB", sector: "Lithium", keywords: ["Albemarle"] },
+    { id: "newmont", name: "Newmont", ticker: "NEM", sector: "Gold", keywords: ["Newmont"] },
+    { id: "barrick", name: "Barrick Gold", ticker: "GOLD", sector: "Gold", keywords: ["Barrick"] },
+    { id: "anglo-american", name: "Anglo American", ticker: "AAL", sector: "Mining", keywords: ["Anglo American"] },
+    { id: "exxon", name: "ExxonMobil", ticker: "XOM", sector: "Oil & Gas", keywords: ["ExxonMobil", "Exxon"] },
+  ];
+
+  // GET /api/watchlist
+  app.get("/api/watchlist", (_req, res) => {
+    res.json({ success: true, data: watchlist });
+  });
+
+  // POST /api/watchlist — add a company
+  app.post("/api/watchlist", (req, res) => {
+    const { name, ticker, sector } = req.body;
+    if (!name) return res.status(400).json({ success: false, error: "Name is required" });
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
+    if (watchlist.find(c => c.id === id)) {
+      return res.status(409).json({ success: false, error: "Already in watchlist" });
+    }
+    const company: WatchlistCompany = {
+      id,
+      name,
+      ticker: ticker || undefined,
+      sector: sector || "Other",
+      keywords: [name],
+    };
+    if (ticker) company.keywords.push(ticker);
+    watchlist.push(company);
+    res.json({ success: true, data: company });
+  });
+
+  // DELETE /api/watchlist/:id
+  app.delete("/api/watchlist/:id", (req, res) => {
+    const id = req.params.id;
+    const before = watchlist.length;
+    watchlist = watchlist.filter(c => c.id !== id);
+    if (watchlist.length === before) {
+      return res.status(404).json({ success: false, error: "Not found" });
+    }
+    res.json({ success: true });
+  });
+
+  // GET /api/watchlist/news — match news to watchlist companies
+  app.get("/api/watchlist/news", async (_req, res) => {
     try {
-      const { commodityId } = req.body;
-      if (!commodityId || typeof commodityId !== "string") {
-        return res.status(400).json({ success: false, error: "commodityId is required" });
+      const allNews = await fetchCommodityNews();
+      if (!allNews || allNews.length === 0) {
+        return res.json({ success: true, data: [] });
       }
-      const item = await storage.addToWatchlist(commodityId);
-      res.status(201).json(item);
-    } catch (err) {
-      console.error("/api/watchlist POST error:", err);
-      res.status(500).json({ success: false, error: "Internal server error" });
-    }
-  });
 
-  // DELETE /api/watchlist/:commodityId - remove item from watchlist
-  app.delete("/api/watchlist/:commodityId", async (req, res) => {
-    try {
-      const { commodityId } = req.params;
-      await storage.removeFromWatchlist(commodityId);
-      res.json({ success: true });
+      const results = watchlist.map(company => {
+        const matched = allNews.filter((article: any) => {
+          const text = ((article.headline || "") + " " + (article.summary || "")).toLowerCase();
+          return company.keywords.some(kw => text.includes(kw.toLowerCase()));
+        }).slice(0, 5); // max 5 articles per company
+
+        return {
+          ...company,
+          articles: matched.map((a: any) => ({
+            id: a.id,
+            headline: a.headline,
+            source: a.source,
+            date: a.date,
+            url: a.url,
+            topic: a.topic,
+          })),
+          articleCount: matched.length,
+        };
+      }).filter(c => c.articleCount > 0) // only show companies with news
+        .sort((a, b) => b.articleCount - a.articleCount);
+
+      res.json({ success: true, data: results });
     } catch (err) {
-      console.error("/api/watchlist DELETE error:", err);
+      console.error("Watchlist news error:", err);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
   });
